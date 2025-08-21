@@ -16,7 +16,8 @@ class MessageTypes(enum.IntEnum):
     RESP_LEVEL = enum.auto()
     RESP_WIN = enum.auto()
     RESP_LOSE = enum.auto()
-    RESP_ERROR = enum.auto()
+    RESP_ERROR = enum.auto(),
+    LEVEL_SIZE = 101
 
 
 class Message:
@@ -85,17 +86,17 @@ class Message:
         """Deserialize buffer received"""
 
         response_header = "!BB"
-        response_level = '101s'
+        response_level = f"{MessageTypes.LEVEL_SIZE}s"
         try:
             if len(buffer) == 0:
                 return MessageTypes.RESP_ERROR.value, "Error Occured Unpacking"
-            mtype, mlen = struct.unpack_from(f"{response_header}", buffer, offset = 0)
+            mtype, _ = struct.unpack_from(f"{response_header}", buffer, offset = 0)
 
             match mtype:
 
                 case MessageTypes.RESP_REGISTERED.value:
 
-                    mtype, _, mdata = struct.unpack(f"{response_header}{len(buffer) - 2}s", buffer)
+                    mtype, _, mdata = struct.unpack(f"{response_header}{len(buffer) - 2}s", buffer) #unpack the message type and data
                     return mtype, mdata
                 
                 case MessageTypes.RESP_STANDARD.value:

@@ -38,7 +38,7 @@ class DotTrail(cmd2.Cmd):
             return False
     def do_register(self, arg):
         """Registers the client with the server"""
-        
+        #All the registration info is passed in the format username@ip:port
         if self.register_ran:
             self.poutput("Already Registered and established connection!")
             return
@@ -83,7 +83,10 @@ class DotTrail(cmd2.Cmd):
 
     def do_display(self, arg):
         """displays current board to user"""
-
+        #displays the current board to the user
+        if not self.register_ran:
+            self.poutput("Register before utilizing other commands")
+            return
         if not self.socket:
             self.poutput("Register before utilizing other commands")
             return
@@ -113,6 +116,11 @@ class DotTrail(cmd2.Cmd):
             self.poutput(e.with_traceback(e.__traceback__))
     
     def do_move(self, arg):
+        """moves the player in the direction specified by the argument"""
+        #arg should be one of the following : up, down, left, right
+        if not self.register_ran:
+            self.poutput("Register before utilizing other commands")
+            return
         if not self.socket:
             self.poutput("Register before utilizing other commands")
             return
@@ -148,7 +156,7 @@ class DotTrail(cmd2.Cmd):
 
     @staticmethod
     def validate_registration(argument : str) -> tuple:
-
+        """Validates the registration argument and returns username, ip, port"""
         regex_val = r'([A-Za-z0-9]+)@([A-Za-z0-9\.-]+):([0-9]{1,5})$'
 
         if not (match := re.search(regex_val, argument)):
@@ -177,14 +185,9 @@ class DotTrail(cmd2.Cmd):
         
         return username, ip, port
 
-    # def do_test(self,_):
-
-    #     x = b'\x02\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x00'
-
-    #     print(DotTrail.print_level(x))
-
     @staticmethod  
     def print_level(level_bytes : bytes) -> str:
+        """Converts the level bytes to a string representation for display"""
         level_bytes = bytearray(level_bytes)
 
         level_str = ""
@@ -197,6 +200,8 @@ class DotTrail(cmd2.Cmd):
                 level_str += '- '
             elif level_bytes[i] == 2:
                 level_str += '* '
+            elif level_bytes[i] == 3:
+                level_str += 'O '
         
         return level_str
         

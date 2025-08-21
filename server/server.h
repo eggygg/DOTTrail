@@ -38,7 +38,7 @@ typedef struct
 
 /**
  * @brief 
- * 
+ * function to deserialize a packet from a buffer from the client
  * @param buffer 
  * @param length 
  * @return server_t* 
@@ -47,7 +47,8 @@ server_t * deserialize_packet(uint8_t * buffer, size_t length);
 
 /**
  * @brief Create a packet object
- * 
+ * creates a packet with the given type and data]
+ * @param length
  * @param type 
  * @param data 
  * @return server_t* 
@@ -56,7 +57,7 @@ server_t * create_packet(uint8_t type, size_t len, char * data);
 
 /**
  * @brief 
- * 
+ * serializes a packet to a buffer
  * @param packet 
  * @param buffer 
  * @return true 
@@ -66,7 +67,7 @@ bool serialize_packet(server_t * packet, uint8_t * buffer);
 
 /**
  * @brief 
- * 
+ * frees the memory allocated for a server_t message
  * @param msg 
  */
 void free_message(server_t * msg);

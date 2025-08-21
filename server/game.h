@@ -35,7 +35,7 @@ typedef enum
 
 /**
  * @brief 
- * 
+ * validates move and updates game state
  * @param game 
  * @return true 
  * @return false 
@@ -44,7 +44,7 @@ bool make_move(game_t * game, char * move);
 
 /**
  * @brief 
- * 
+ * checks the state for a win or lore condition
  * @param game 
  * @return true 
  * @return false 
@@ -53,7 +53,7 @@ int check_state(game_t * game);
 
 /**
  * @brief 
- * 
+ * poopulates the game with AI players
  * @param game 
  * @return true 
  * @return false 
@@ -62,7 +62,7 @@ bool populate_ai(game_t * game);
 
 /**
  * @brief 
- * 
+ * randomizes the AI players
  * @param game 
  * @return true 
  * @return false 
@@ -71,7 +71,7 @@ int randomize_ai(game_t * game);
 
 /**
  * @brief 
- * 
+ * randomizes the choices for the player
  * @param game 
  * @return true 
  * @return false 
@@ -98,7 +98,7 @@ game_t * load_game(game_t * game);
 
 /**
  * @brief 
- * 
+ * serialize the game data into a byte array to send to the client
  * @param game 
  * @return true 
  * @return false 

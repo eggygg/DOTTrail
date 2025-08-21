@@ -3,6 +3,7 @@
 #include "game.h"
 
 #include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -18,6 +19,7 @@
 
 int game_loop(int connfd, int game)
 {   
+    //initialize game variables
     game_t * curr_game = NULL;
     server_t * resp_packet = NULL;
     server_t * recv_packet = NULL;
@@ -26,6 +28,7 @@ int game_loop(int connfd, int game)
     char err_msg[] = "Game Failed To Register!\n";
     char register_success[] = "Registration Successful!\n";
     int connected = 0;
+    //game loop
     while (1 == game)
     {
         char buff[MAX] = {0};
@@ -39,12 +42,12 @@ int game_loop(int connfd, int game)
             printf("Connection closed by client\n");
             exit(0);
         }
-
+        // switch statement to handle different request types
         switch(buff[0])
         {
             case REQ_REGISTER:
                 
-
+                // deserialize packets on entry
                 recv_packet = deserialize_packet(buff, bytes_received);
 
                 if (NULL == recv_packet)
@@ -57,10 +60,11 @@ int game_loop(int connfd, int game)
                 printf("RECV LEN : %d \n", recv_packet->length);
                 printf("RECV Data : %s\n", recv_packet->data);
                 curr_game = calloc(1, sizeof(game_t));
-
+                // allocate for the game struct
                 printf("Below initalization of game struct\n");
                     if (NULL == curr_game)
                     {
+                        // send error msg back if we failed to allocate memory 
                         perror("Failed to initialize an new game!\n");
                         //need to call failure here
                         resp_packet = create_packet(RESP_ERROR, strlen(err_msg) + 1, err_msg);
@@ -70,7 +74,7 @@ int game_loop(int connfd, int game)
                             break;
                         }
                         printf("made the packet\n");
-                        if (serialize_packet(resp_packet, resp_buff))
+                        if (serialize_packet(resp_packet, resp_buff)) //serialize the packet and error check as needed
                         {
                             bytes_sent = send(connfd, resp_buff, strlen(resp_buff) + 1, 0);
 
@@ -119,7 +123,7 @@ int game_loop(int connfd, int game)
                 }
                 printf("Successfully Responded to the client\n");
                 connected = 1;
-                free(recv_packet->data);
+                free(recv_packet->data); //free all used memory
                 recv_packet-> data = NULL;
                 free(recv_packet);
                 recv_packet = NULL;
@@ -185,6 +189,16 @@ int game_loop(int connfd, int game)
                     break;
                 }
                 printf("Successfully Responded to the client\n");
+                free(recv_packet->data);
+                recv_packet-> data = NULL;
+                free(recv_packet);
+                recv_packet = NULL;
+                free(resp_packet->data);
+                resp_packet-> data = NULL;
+                free(resp_packet);
+                resp_packet = NULL;
+                free(serialized_level)
+                serialized_level = NULL;
                 break;
 
             case REQ_NEW_GAME:
@@ -199,6 +213,93 @@ int game_loop(int connfd, int game)
                 break;
             
             case REQ_MOVE:
+                printf("START OF GETTING MOVE!!!\n\n");
+                if (0 == connected)
+                {
+                    break;
+                }
+                recv_packet = deserialize_packet(buff, bytes_received);
+
+                if (NULL == recv_packet)
+                {
+                    perror("Failed to deserialize packet!\n");
+                    break;
+                }
+                printf("RECV TYPE : %d\n", recv_packet->type);
+                printf("RECV LEN : %d\n", recv_packet->length);
+
+                printf("CURR GAME NAME : %s\n", curr_game->player_name);
+                
+                bool valid_move = make_move(curr_game, recv_packet->data);
+
+                if (!valid_move)
+                {
+                resp_packet = create_packet(RESP_ERROR, strlen("Invalid Move Try Again") + 1, "Invalid Move Try Again");
+
+                    if (NULL == resp_packet)
+                    {
+                        perror("failed to create response packet!\n");
+                        break;
+                    }
+                    if (serialize_packet(resp_packet, resp_buff))
+                    {
+                        for (int i = 0; i < resp_packet->length; i++)
+                        {
+                            printf("%02x", resp_buff[i]);
+                        }
+                        printf("In serialize packet\n");
+                        bytes_sent = send(connfd, resp_buff, resp_packet->length + 2, 0);
+
+                        if (-1 == bytes_sent)
+                        {
+                            perror("Failed to send data to client!\n");
+                            break;
+                        }
+                        break;
+                    }
+                    printf("Successfully Responded to the client\n");
+                    break;                    
+                }
+
+                uint8_t * serialized_level = serialize_game_data(curr_game);
+
+                if (NULL == serialized_level)
+                {
+                    perror("Err : Calloc Failure\n");
+                    break;
+                }
+                
+                printf("CURR LEVEL: %s\n", serialized_level);
+                
+                printf("above packet response\n");
+                resp_packet = create_packet(RESP_LEVEL, strlen(serialized_level) + 1, serialized_level);
+                printf("RESP TYPE : %d\n", resp_packet->type);
+                printf("RESP LEN : %d\n", resp_packet->length);
+                printf("RESP DATA : %s\n", resp_packet->data);
+                printf("Below packet response\n");
+                if (NULL == resp_packet)
+                {
+                    perror("failed to create response packet!\n");
+                    break;
+                }
+                printf("Made it to serialize packet\n");
+                if (serialize_packet(resp_packet, resp_buff))
+                {
+                    for (int i = 0; i < resp_packet->length; i++)
+                    {
+                        printf("%02x", resp_buff[i]);
+                    }
+                    printf("In serialize packet\n");
+                    bytes_sent = send(connfd, resp_buff, resp_packet->length + 2, 0);
+
+                    if (-1 == bytes_sent)
+                    {
+                        perror("Failed to send data to client!\n");
+                        break;
+                    }
+                    break;
+                }
+                printf("Successfully Responded to the client\n");
                 break;
         }
 

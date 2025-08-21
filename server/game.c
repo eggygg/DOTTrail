@@ -14,135 +14,71 @@
 
 bool make_move(game_t * game, char * move)
 {
-    
+    int dx = 0;
+    int dy = 0;
+    int x = 0;
+    int y = 0;
+    int new_x = 0;
+    int new_y = 0;
+    int target = 0;
+
     if (0 == strcmp(move, "up"))
     {
-        for (int i = 0; i < ROWS; i++)
-        {
-            for (int j = 0; j < COLS; j++)
-            {
-                if (game -> level[i][j] == PLAYER)
-                {
-                    if (0 != i && game->level[i - 1][j] != OBSTACLE && game->level[i - 1][j] != ENEMY)
-                    {
-                        game->level[i -1][j] = PLAYER;
-                        game->x_pos = j;
-                        game -> y_pos = i - 1;
-                        return true;
-                    }
-                    else if (0 != i && game->level[i - 1][j] == OBSTACLE && game->level[i - 1][j] != ENEMY)
-                    {
-                        game->level[i-1][j] = OBSTACLE_HIT;
-                        game->x_pos = j;
-                        game -> y_pos = i - 1;
-                        return true;
-                    }
-                    else if (0 != i && game->level[i - 1][j] != OBSTACLE && game->level[i - 1][j] == ENEMY)
-                    {
-                        game->level[i - 1][j] = ENEMY_HIT;
-                        game->x_pos = j;
-                        game -> y_pos = i - 1;
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    else if (0 == strcmp(move, "left"))
-    {
-        for (int i = 0; i < ROWS; i++)
-        {
-            for (int j = 0; j < COLS; j++)
-            {
-                if (game -> level[i][j] == PLAYER)
-                {
-                    if (0 != j && game->level[i][j - 1] != OBSTACLE && game->level[i][j - 1] != ENEMY)
-                    {
-                        game->level[i][j - 1] = PLAYER;
-                        game->x_pos = j - 1;
-                        game->y_pos = i;
-                        return true;
-                    }
-                    else if (0 != i && game->level[i][j - 1] == OBSTACLE && game->level[i][j - 1] != ENEMY)
-                    {
-                        game->level[i-1][j] = OBSTACLE_HIT;
-                        game->x_pos = j - 1;
-                        game -> y_pos = i;
-                        return true;
-                    }
-                    else if (0 != i && game->level[i][j - 1] != OBSTACLE && game->level[i][j - 1] == ENEMY)
-                    {
-                        game->level[i-1][j] = ENEMY_HIT;
-                        game->x_pos = j - 1;
-                        game -> y_pos = i;
-                        return true;
-                    }
-                }
-            }
-        }
-    }
-    else if (0 == strcmp(move, "right"))
-    {
-        for (int i = 0; i < ROWS; i++)
-        {
-            for (int j = 0; j < COLS; j++)
-            {
-                if (game -> level[i][j] == PLAYER)
-                {
-                    if (9 != j && game->level[i][j + 1] != OBSTACLE)
-                    {
-                        return true;
-                    }
-                    else if (9 != i && game->level[i][j + 1] == OBSTACLE && game->level[i][j + 1] != ENEMY)
-                    {
-                        game->level[i-1][j] = OBSTACLE_HIT;
-                        game->x_pos = j + 1;
-                        game -> y_pos = i;
-                        return true;
-                    }
-                    else if (9 != i && game->level[i][j + 1] != OBSTACLE && game->level[i][j + 1] == ENEMY)
-                    {
-                        game->level[i-1][j] = ENEMY_HIT;
-                        game->x_pos = j + 1;
-                        game -> y_pos = i;
-                        return true;
-                    }
-                }
-            }
-        }
+        dy = -1;
     }
     else if (0 == strcmp(move, "down"))
     {
-        for (int i = 0; i < ROWS; i++)
-        {
-            for (int j = 0; j < COLS; j++)
-            {
-                if (game -> level[i][j] == PLAYER)
-                {
-                    if (9 != i && game->level[i + 1][j] != OBSTACLE)
-                    {
-                        return true;
-                    }
-                    else if (9 != i && game->level[i + 1][j] == OBSTACLE && game->level[i + 1][j] != ENEMY)
-                    {
-                        game->level[i-1][j] = OBSTACLE_HIT;
-                        game->x_pos = j + 1;
-                        game -> y_pos = i;
-                        return true;
-                    }
-                    else if (9 != i && game->level[i + 1][j] != OBSTACLE && game->level[i - 1][j] == ENEMY)
-                    {
-                        game->level[i-1][j] = ENEMY_HIT;
-                        game->x_pos = j + 1;
-                        game -> y_pos = i;
-                        return true;
-                    }
-                }
-            }
-        }
+        dy = 1;
+    }
+    else if (0 == strcmp(move, "left"))
+    {
+        dx = -1;
+    }
+    else if (0 == strcmp(move, "right"))
+    {
+        dx = 1;
+    }
+    else
+    {
+        return false;
     }
 
-    return false;
+    x = game->x_pos;
+    y = game->y_pos;
+    new_x = x + dx;
+    new_y = y + dy;
+
+    //Check if they are in bounds
+    if ((0 > new_x) || (COLS <= new_x) || (0 > new_y) || (ROWS <= new_y))
+    {
+        return false;
+    }
+
+    target = game->level[new_y][new_x];
+
+    if (OBSTACLE == target)
+    {
+        game->level[new_y][new_x] = OBSTACLE_HIT;
+        game->x_pos = new_x;
+        game->y_pos = new_y;
+        return true;
+    }
+    else if (ENEMY == target)
+    {
+        game->level[new_y][new_x] = ENEMY_HIT;
+        game->x_pos = new_x;
+        game->y_pos = new_y;
+        return true;
+    }
+    else
+    {
+        // Move Player
+        game->level[y][x] = 0;
+        game->level[new_y][new_x] = PLAYER;
+        game->x_pos = new_x;
+        game->y_pos = new_y;
+        return true;
+    }
 }
 
 // 0 equals no issue 1 equals obstacle hit 2 equals enemy hit 3 equals error
@@ -253,7 +189,7 @@ uint8_t * serialize_game_data(game_t * game)
     uint8_t * buffer = NULL;
     uint8_t offset = 0;
 
-    game->level[0][0] = PLAYER;
+    game->level[9][4] = PLAYER;
     buffer = calloc(102, sizeof(uint8_t));
 
     printf("Size of game_t %ld\n", sizeof(*game));
