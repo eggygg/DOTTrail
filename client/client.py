@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import argparse
 import cmd2
 import re
+import select
 import socket
 import typing
 
@@ -81,7 +83,7 @@ class DotTrail(cmd2.Cmd):
         except OSError as e:
             self.poutput(e.with_traceback(e.__traceback__))
 
-    def do_display(self, arg):
+    def do_display(self, _):
         """displays current board to user"""
         #displays the current board to the user
         if not self.register_ran:
@@ -115,6 +117,10 @@ class DotTrail(cmd2.Cmd):
         except OSError as e:
             self.poutput(e.with_traceback(e.__traceback__))
     
+    move_parser = argparse.ArgumentParser()
+    move_parser.add_argument("direction", choices=["up", "down", "left", "right"], help="Direction to move in")
+
+    @cmd2.with_argparser(move_parser)
     def do_move(self, arg):
         """moves the player in the direction specified by the argument"""
         #arg should be one of the following : up, down, left, right
@@ -126,7 +132,7 @@ class DotTrail(cmd2.Cmd):
             return
         
         try:
-            packed_msg = Message(MessageTypes.REQ_MOVE, arg).serialize()
+            packed_msg = Message(MessageTypes.REQ_MOVE, arg.direction).serialize()
 
             if not self.send_packet(packed_msg):
                 self.poutput("Err : Failure to send msg to server")
@@ -216,15 +222,17 @@ class DotTrail(cmd2.Cmd):
         
         try:
             bytes_sent = 0
-
-            self.socket.settimeout(2)
+            timeout = 5
 
             while bytes_sent < len(packet):
-
-                sent = self.socket.send(packet[bytes_sent:])
-                if sent <= 0:
-                    raise RuntimeError("Socket Connection broken")
-                bytes_sent += sent
+                ready = select.select([self.socket], [], [], timeout)
+                if ready[0]:
+                    sent = self.socket.send(packet[bytes_sent:])
+                    if sent <= 0:
+                        raise RuntimeError("Socket Connection broken")
+                    bytes_sent += sent
+                else:
+                    break
             
             self.poutput(f"Bytes Sent : {sent}")
             return True
@@ -241,13 +249,17 @@ class DotTrail(cmd2.Cmd):
             return b''
         try:
             bytes_recv = bytearray()
-            self.socket.settimeout(2)
+            timeout = 5
 
-            while len(bytes_recv) <= size:
-                recv = self.socket.recv(size - len(bytes_recv))
-                if not recv:
-                    raise RuntimeError("Connection Closed")
-                bytes_recv.extend(recv)
+            while len(bytes_recv) < size:
+                ready = select.select([self.socket], [], [], timeout)
+                if ready[0]:
+                    recv = self.socket.recv(size - len(bytes_recv))
+                    if not recv:
+                        raise RuntimeError("Connection Closed")
+                    bytes_recv.extend(recv)
+                else:
+                    break
             
             return bytes(bytes_recv)
 

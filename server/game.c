@@ -47,7 +47,7 @@ bool make_move(game_t * game, char * move)
     y = game->y_pos;
     new_x = x + dx;
     new_y = y + dy;
-
+    
     //Check if they are in bounds
     if ((0 > new_x) || (COLS <= new_x) || (0 > new_y) || (ROWS <= new_y))
     {
